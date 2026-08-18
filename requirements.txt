@@ -1,0 +1,13 @@
+# --- Application ---
+fastapi~=0.115          # web framework: routing, validation, docs
+uvicorn[standard]~=0.32 # ASGI server that actually runs FastAPI
+pydantic-settings~=2.6  # loads configuration from .env into a typed object
+
+# --- Database ---
+sqlalchemy~=2.0         # ORM: tables as Python classes
+alembic~=1.14           # migrations: version control for the schema
+psycopg[binary]~=3.2    # PostgreSQL driver
+
+# --- Tests ---
+pytest~=8.3
+httpx~=0.28             # HTTP client used by FastAPI's TestClient

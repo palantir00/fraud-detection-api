@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    env_file: .env
+    ports:
+      # Exposed on the host so psql and locally run pytest can reach it.
+      - "5432:5432"
+    volumes:
+      # Named volume: data survives "docker compose down".
+      # Without it every restart would wipe the database.
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # "Container started" is not the same as "Postgres accepts
+      # connections". pg_isready checks the latter.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        # Wait for the healthcheck to pass, not just for the container to start.
+        condition: service_healthy
+    volumes:
+      # Bind mount for development: save a file and --reload restarts
+      # the server, no image rebuild needed.
+      - .:/code
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:
