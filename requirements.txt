@@ -1,0 +1,13 @@
+# --- Aplikacja ---
+fastapi~=0.115          # framework webowy: routing, walidacja, dokumentacja
+uvicorn[standard]~=0.32 # serwer, który faktycznie uruchamia FastAPI
+pydantic-settings~=2.6  # wczytywanie konfiguracji z .env do obiektu Pythona
+
+# --- Baza danych ---
+sqlalchemy~=2.0         # ORM: tabele jako klasy Pythona
+alembic~=1.14           # migracje: wersjonowanie schematu bazy
+psycopg[binary]~=3.2    # sterownik PostgreSQL dla Pythona
+
+# --- Testy ---
+pytest~=8.3
+httpx~=0.28             # klient HTTP, którego FastAPI używa w testach endpointów
