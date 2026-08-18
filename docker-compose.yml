@@ -3,16 +3,15 @@ services:
     image: postgres:16-alpine
     env_file: .env
     ports:
-      # Wystawiamy port na hosta, żeby móc się wpiąć z psql / DBeavera
-      # i żeby pytest uruchamiany lokalnie widział bazę.
+      # Exposed on the host so psql and locally run pytest can reach it.
       - "5432:5432"
     volumes:
-      # Nazwany wolumen = dane przeżywają "docker compose down".
-      # Bez tego każdy restart kasowałby bazę.
+      # Named volume: data survives "docker compose down".
+      # Without it every restart would wipe the database.
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      # "Kontener wystartował" != "Postgres przyjmuje połączenia".
-      # pg_isready sprawdza to drugie.
+      # "Container started" is not the same as "Postgres accepts
+      # connections". pg_isready checks the latter.
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
@@ -25,11 +24,11 @@ services:
       - "8000:8000"
     depends_on:
       db:
-        # Czekaj aż healthcheck przejdzie, nie tylko aż kontener wstanie.
+        # Wait for the healthcheck to pass, not just for the container to start.
         condition: service_healthy
     volumes:
-      # Kod z dysku podmontowany do kontenera: zapisujesz plik,
-      # --reload restartuje serwer. Bez tego trzeba by przebudowywać obraz.
+      # Bind mount for development: save a file and --reload restarts
+      # the server, no image rebuild needed.
       - .:/code
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 

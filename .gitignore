@@ -1,4 +1,4 @@
-# --- Sekrety: NIGDY nie trafiają do repo ---
+# --- Secrets: never committed ---
 .env
 .env.*
 !.env.example
@@ -11,12 +11,12 @@ __pycache__/
 build/
 dist/
 
-# --- Wirtualne środowiska ---
+# --- Virtual environments ---
 .venv/
 venv/
 env/
 
-# --- Testy i narzędzia ---
+# --- Tests and tooling ---
 .pytest_cache/
 .coverage
 htmlcov/

@@ -1,6 +1,6 @@
-"""Etap 0: minimalna aplikacja, żeby dało się sprawdzić, że rusztowanie działa.
+"""Minimal application used to verify the scaffolding works.
 
-Prawdziwe endpointy dochodzą w Etapie 4.
+The real endpoints arrive in stage 4.
 """
 
 from fastapi import FastAPI
@@ -10,5 +10,5 @@ app = FastAPI(title="Fraud Detection API")
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    """Czy serwis żyje. Nie sprawdza jeszcze bazy."""
+    """Liveness probe. Does not check the database yet."""
     return {"status": "ok"}
