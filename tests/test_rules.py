@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from app.models import Transaction
+from app.rules.geography import GeographyRule
 from app.rules.velocity import VelocityRule
 
 NOW = datetime(2026, 8, 18, 12, 0, tzinfo=timezone.utc)
@@ -67,3 +68,69 @@ def test_velocity_handles_empty_history():
     rule = VelocityRule(max_transactions=3, window_minutes=2)
 
     assert rule.evaluate(make_transaction(), []) is None
+
+
+# --- Geography rule ---------------------------------------------------------
+#
+# The rule compares the distance between two countries against the time
+# available to travel it. Anything faster than a plane is impossible, so the
+# card is being used in two places at once.
+
+HOUR = 3600
+
+
+def test_geography_flags_impossible_travel():
+    """Poland then the United States ten minutes later.
+
+    Roughly 7500 km apart: not reachable in ten minutes by any means.
+    """
+    rule = GeographyRule(max_speed_kmh=900)
+    current = make_transaction(country="US")
+    history = [make_transaction(seconds_ago=600, country="PL")]
+
+    reason = rule.evaluate(current, history)
+
+    assert reason is not None
+    assert "PL" in reason and "US" in reason
+
+
+def test_geography_allows_same_country():
+    """Two transactions from Poland a minute apart are unremarkable."""
+    rule = GeographyRule(max_speed_kmh=900)
+    current = make_transaction(country="PL")
+    history = [make_transaction(seconds_ago=60, country="PL")]
+
+    assert rule.evaluate(current, history) is None
+
+
+def test_geography_allows_plausible_travel():
+    """Poland to Germany with three hours in between is an ordinary trip.
+
+    This is the test a naive "different country within an hour" rule fails:
+    it cannot tell a neighbouring country from another continent.
+    """
+    rule = GeographyRule(max_speed_kmh=900)
+    current = make_transaction(country="DE")
+    history = [make_transaction(seconds_ago=3 * HOUR, country="PL")]
+
+    assert rule.evaluate(current, history) is None
+
+
+def test_geography_handles_empty_history():
+    """A user's first transaction has nothing to compare against."""
+    rule = GeographyRule(max_speed_kmh=900)
+
+    assert rule.evaluate(make_transaction(country="US"), []) is None
+
+
+def test_geography_ignores_unknown_country():
+    """Fail open: an unmapped country code must not flag by itself.
+
+    The other rules still assess the transaction, so a missing coordinate
+    degrades coverage rather than flooding analysts with false positives.
+    """
+    rule = GeographyRule(max_speed_kmh=900)
+    current = make_transaction(country="ZZ")
+    history = [make_transaction(seconds_ago=600, country="PL")]
+
+    assert rule.evaluate(current, history) is None
